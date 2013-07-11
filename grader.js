@@ -28,7 +28,6 @@ var rest    = require('restler');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
 var FNAME = "downloaded_url.html";
-var sleep = require('sleep');
 
 var assertFileExists = function(infile) {
     var instr = infile.toString();
@@ -67,20 +66,17 @@ var clone = function(fn) {
 var download_url = function(url, fname) {
     rest.get(url).on('complete', function(result) {
         if (result instanceof Error) {
-	console.log('error: ' + result.message);
-        //return false;
-        process.exit(1);
+			console.log('error: ' + result.message);
+			process.exit(1);
 	} else {
-        fs.writeFileSync(fname, result)
-        //fs.writeFileSync(fname, result, function(err) {
-	//	if(err) throw err;
-          //      console.log("saved");
-	//	});
+       fs.writeFileSync(FNAME, result)
+       var checkJson = checkHtmlFile(FNAME, program.checks);
+       var outJson = JSON.stringify(checkJson, null, 4);
+       console.log(outJson);
        console.log("finished download");
        return;
        }
     });
-    do {sleep.sleep(1); console.log("*");} while(true);
 }
 
 if(require.main == module) {
@@ -93,17 +89,14 @@ if(require.main == module) {
         .parse(process.argv);
     if (program.url) {
         console.log('processing URL '+program.url);
-        download_url(program.url, FNAME);
-        fname = FNAME;
+        download_url(program.url);
     }
     else {
         fname = program.file;
+        var checkJson = checkHtmlFile(fname, program.checks);
+    	var outJson = JSON.stringify(checkJson, null, 4);
+    	console.log(outJson);
     }
-    var checkJson = checkHtmlFile(fname, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);   
-
-    console.log(outJson);
-
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
